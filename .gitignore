@@ -1,0 +1,56 @@
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+
+# Env files (keep *.example)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.venv/
+venv/
+
+# Backend runtime
+storage/
+
+# ML artifacts (weights/checkpoints)
+checkpoints/
+*.ckpt
+*.pth
+*.pt
+*.safetensors
+*.onnx
+*.tflite
+*.npy
+*.npz
+
+# Third-party repos / weights
+third_party/
+gfpgan/
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+.turbo/
+.next/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
