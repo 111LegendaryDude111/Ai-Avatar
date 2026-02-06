@@ -1,0 +1,17 @@
+# Extra dependencies for the Stable Video Diffusion (SVD) backend.
+#
+# Install PyTorch separately for your platform:
+# - macOS (Apple Silicon / MPS): https://pytorch.org/get-started/locally/
+# - NVIDIA CUDA (Linux): install the CUDA wheel from PyTorch index-url
+#
+# Then:
+#   pip install -r backend/requirements.txt -r backend/requirements.svd.txt
+
+diffusers>=0.28.0
+transformers>=4.38.0
+accelerate>=0.26.0
+safetensors>=0.4.2
+huggingface-hub>=0.20.0
+
+Pillow>=10.0.0
+numpy>=1.24.0

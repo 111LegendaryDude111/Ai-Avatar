@@ -34,6 +34,34 @@ def _cache_key(image_path: Path, audio_path: Path, options: dict[str, Any]) -> s
             "sadtalker_preprocess": settings.sadtalker_preprocess,
             "sadtalker_enhancer": settings.sadtalker_enhancer,
         }
+    elif settings.generator_backend == "svd":
+        backend_cfg = {
+            "svd_model": settings.svd_model,
+            "svd_revision": settings.svd_revision,
+            "svd_variant": settings.svd_variant,
+            "svd_local_files_only": settings.svd_local_files_only,
+            "svd_device": settings.svd_device,
+            "svd_dtype": settings.svd_dtype,
+            "svd_width": settings.svd_width,
+            "svd_height": settings.svd_height,
+            "svd_fps": settings.svd_fps,
+            "svd_num_frames": settings.svd_num_frames,
+            "svd_num_inference_steps": settings.svd_num_inference_steps,
+            "svd_motion_bucket_id": settings.svd_motion_bucket_id,
+            "svd_noise_aug_strength": settings.svd_noise_aug_strength,
+            "svd_min_guidance_scale": settings.svd_min_guidance_scale,
+            "svd_max_guidance_scale": settings.svd_max_guidance_scale,
+            "svd_decode_chunk_size": settings.svd_decode_chunk_size,
+            "svd_seed": settings.svd_seed,
+            "svd_enable_attention_slicing": settings.svd_enable_attention_slicing,
+            "svd_enable_vae_slicing": settings.svd_enable_vae_slicing,
+            "svd_enable_vae_tiling": settings.svd_enable_vae_tiling,
+            "svd_enable_cpu_offload": settings.svd_enable_cpu_offload,
+            "svd_extend_to_audio": settings.svd_extend_to_audio,
+            "svd_extend_strategy": settings.svd_extend_strategy,
+            "svd_auto_downscale": settings.svd_auto_downscale,
+            "svd_mps_max_pixels": settings.svd_mps_max_pixels,
+        }
     else:
         backend_cfg = {}
     hasher.update(json.dumps(backend_cfg, sort_keys=True, separators=(",", ":")).encode("utf-8"))
