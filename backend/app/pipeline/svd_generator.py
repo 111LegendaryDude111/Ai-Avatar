@@ -207,6 +207,14 @@ class StableVideoDiffusionAvatarVideoGenerator:
                     except Exception:
                         progress_cb(0.09, "SVD: VAE tiling not supported, continuing")
 
+        enable_xformers = _coerce_bool(options.get("svd_enable_xformers"), settings.svd_enable_xformers)
+        if enable_xformers and device == "cuda" and hasattr(pipe, "enable_xformers_memory_efficient_attention"):
+            try:
+                pipe.enable_xformers_memory_efficient_attention()
+                progress_cb(0.09, "SVD: xFormers enabled")
+            except Exception:
+                progress_cb(0.09, "SVD: xFormers not available, continuing")
+
         enable_cpu_offload = _coerce_bool(options.get("svd_enable_cpu_offload"), settings.svd_enable_cpu_offload)
         if enable_cpu_offload and device == "cuda":
             # Requires `accelerate`. Useful on small GPUs.
@@ -353,7 +361,7 @@ class StableVideoDiffusionAvatarVideoGenerator:
                 raise RuntimeError(
                     "SVD failed due to memory limits (common on Apple Silicon / MPS).\n"
                     "Try:\n"
-                    "- Smaller resolution: set `AVATAR_SVD_WIDTH=320` and `AVATAR_SVD_HEIGHT=176` (or 384x216)\n"
+                    "- Smaller resolution: set `AVATAR_SVD_WIDTH=512` and `AVATAR_SVD_HEIGHT=288` (or 384x216)\n"
                     "- Smaller decode chunks: `AVATAR_SVD_DECODE_CHUNK_SIZE=1`\n"
                     "- Fewer frames: `AVATAR_SVD_NUM_FRAMES=8` (or less)\n"
                     "- If fp16 is unstable on your setup: `AVATAR_SVD_DTYPE=float32`\n"

@@ -35,8 +35,7 @@ class Settings(BaseSettings):
     ]
 
     # Generator backend selection.
-    generator_backend: str = "sadtalker"  # sadtalker | mock | wav2lip | svd
-    # generator_backend: str = "svd"  # sadtalker | mock | wav2lip | svd
+    generator_backend: str = "mock"  # sadtalker | mock | wav2lip | svd
 
     # Default video settings for the mock generator.
     video_fps: int = 25
@@ -74,6 +73,7 @@ class Settings(BaseSettings):
     svd_enable_vae_slicing: bool = True
     svd_enable_vae_tiling: bool = False
     svd_enable_cpu_offload: bool = False
+    svd_enable_xformers: bool = True
 
     # Since SVD doesn't use audio for motion, we can extend (freeze/loop) the
     # generated frames to match the audio duration for nicer UX.
@@ -83,8 +83,9 @@ class Settings(BaseSettings):
     # MPS (Apple Silicon) can hit huge attention buffers at the default SVD resolution.
     # If enabled, the backend will automatically downscale when running on MPS.
     svd_auto_downscale: bool = True
-    # Default chosen to stay under Metal buffer limits for naive attention on MPS.
-    svd_mps_max_pixels: int = 320 * 176
+    # Default chosen to stay under Metal buffer limits for naive attention on MPS,
+    # while preserving acceptable quality.
+    svd_mps_max_pixels: int = 512 * 288
 
 
 settings = Settings()

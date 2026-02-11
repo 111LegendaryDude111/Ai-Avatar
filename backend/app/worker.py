@@ -57,6 +57,7 @@ def _cache_key(image_path: Path, audio_path: Path, options: dict[str, Any]) -> s
             "svd_enable_vae_slicing": settings.svd_enable_vae_slicing,
             "svd_enable_vae_tiling": settings.svd_enable_vae_tiling,
             "svd_enable_cpu_offload": settings.svd_enable_cpu_offload,
+            "svd_enable_xformers": settings.svd_enable_xformers,
             "svd_extend_to_audio": settings.svd_extend_to_audio,
             "svd_extend_strategy": settings.svd_extend_strategy,
             "svd_auto_downscale": settings.svd_auto_downscale,
