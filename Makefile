@@ -22,7 +22,7 @@ PYTORCH_CUDA_INDEX_URL ?= https://download.pytorch.org/whl/cu121
 	setup-svd-mps setup-svd-cuda setup-svd-cuda-xformers torch-mps torch-cuda \
 	setup-sadtalker sadtalker-torch-mps sadtalker-torch-cuda \
 	backend-dev frontend-dev health \
-	run-sadtalker run-svd-m4 run-svd-5080
+	run-sadtalker run-svd-m4 run-svd-m4-low run-svd-m4-tiny run-svd-m4-pro run-svd-5080
 
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_.-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -98,7 +98,61 @@ run-sadtalker: env-backend ## Run backend with SadTalker generator
 	AVATAR_SADTALKER_PYTHON="$(SADTALKER_DIR)/.venv/bin/python" \
 	$(POETRY) run uvicorn app.main:app --reload --host "$(BACKEND_HOST)" --port "$(BACKEND_PORT)"
 
-run-svd-m4: env-backend ## Run backend with SVD preset for Mac M4 Pro (MPS)
+run-svd-m4: env-backend ## Run backend with SVD balanced preset for Apple Silicon (MPS)
+	cd "$(BACKEND_DIR)" && \
+	PYTORCH_ENABLE_MPS_FALLBACK=1 \
+	AVATAR_GENERATOR_BACKEND=svd \
+	AVATAR_SVD_DEVICE=mps \
+	AVATAR_SVD_DTYPE=float32 \
+	AVATAR_SVD_DECODE_CHUNK_SIZE=1 \
+	AVATAR_SVD_AUTO_DOWNSCALE=true \
+	AVATAR_SVD_MPS_MAX_PIXELS=$$((640*360)) \
+	AVATAR_SVD_WIDTH=640 \
+	AVATAR_SVD_HEIGHT=360 \
+	AVATAR_SVD_NUM_FRAMES=10 \
+	AVATAR_SVD_NUM_INFERENCE_STEPS=30 \
+	AVATAR_SVD_MOTION_BUCKET_ID=60 \
+	AVATAR_SVD_NOISE_AUG_STRENGTH=0.005 \
+	AVATAR_SVD_ENCODE_CRF=18 \
+	$(POETRY) run uvicorn app.main:app --reload --host "$(BACKEND_HOST)" --port "$(BACKEND_PORT)"
+
+run-svd-m4-low: env-backend ## Run backend with SVD low-memory preset for Apple Silicon (MPS)
+	cd "$(BACKEND_DIR)" && \
+	PYTORCH_ENABLE_MPS_FALLBACK=1 \
+	AVATAR_GENERATOR_BACKEND=svd \
+	AVATAR_SVD_DEVICE=mps \
+	AVATAR_SVD_DTYPE=float32 \
+	AVATAR_SVD_DECODE_CHUNK_SIZE=1 \
+	AVATAR_SVD_AUTO_DOWNSCALE=true \
+	AVATAR_SVD_MPS_MAX_PIXELS=$$((512*288)) \
+	AVATAR_SVD_WIDTH=512 \
+	AVATAR_SVD_HEIGHT=288 \
+	AVATAR_SVD_NUM_FRAMES=8 \
+	AVATAR_SVD_NUM_INFERENCE_STEPS=25 \
+	AVATAR_SVD_MOTION_BUCKET_ID=50 \
+	AVATAR_SVD_NOISE_AUG_STRENGTH=0.01 \
+	AVATAR_SVD_ENCODE_CRF=18 \
+	$(POETRY) run uvicorn app.main:app --reload --host "$(BACKEND_HOST)" --port "$(BACKEND_PORT)"
+
+run-svd-m4-tiny: env-backend ## Run backend with SVD ultra-low-memory preset for Apple Silicon (MPS)
+	cd "$(BACKEND_DIR)" && \
+	PYTORCH_ENABLE_MPS_FALLBACK=1 \
+	AVATAR_GENERATOR_BACKEND=svd \
+	AVATAR_SVD_DEVICE=mps \
+	AVATAR_SVD_DTYPE=float32 \
+	AVATAR_SVD_DECODE_CHUNK_SIZE=1 \
+	AVATAR_SVD_AUTO_DOWNSCALE=true \
+	AVATAR_SVD_MPS_MAX_PIXELS=$$((384*216)) \
+	AVATAR_SVD_WIDTH=384 \
+	AVATAR_SVD_HEIGHT=216 \
+	AVATAR_SVD_NUM_FRAMES=6 \
+	AVATAR_SVD_NUM_INFERENCE_STEPS=20 \
+	AVATAR_SVD_MOTION_BUCKET_ID=40 \
+	AVATAR_SVD_NOISE_AUG_STRENGTH=0.01 \
+	AVATAR_SVD_ENCODE_CRF=18 \
+	$(POETRY) run uvicorn app.main:app --reload --host "$(BACKEND_HOST)" --port "$(BACKEND_PORT)"
+
+run-svd-m4-pro: env-backend ## Run backend with higher-quality SVD preset for Apple Silicon (more RAM)
 	cd "$(BACKEND_DIR)" && \
 	PYTORCH_ENABLE_MPS_FALLBACK=1 \
 	AVATAR_GENERATOR_BACKEND=svd \
@@ -113,6 +167,7 @@ run-svd-m4: env-backend ## Run backend with SVD preset for Mac M4 Pro (MPS)
 	AVATAR_SVD_NUM_INFERENCE_STEPS=40 \
 	AVATAR_SVD_MOTION_BUCKET_ID=60 \
 	AVATAR_SVD_NOISE_AUG_STRENGTH=0.005 \
+	AVATAR_SVD_ENCODE_CRF=18 \
 	$(POETRY) run uvicorn app.main:app --reload --host "$(BACKEND_HOST)" --port "$(BACKEND_PORT)"
 
 run-svd-5080: env-backend ## Run backend with SVD preset for a strong CUDA GPU (e.g. 5080)

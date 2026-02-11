@@ -44,6 +44,20 @@ make setup-svd-mps         # Mac (MPS)
 # make setup-svd-cuda PYTORCH_CUDA_INDEX_URL=https://download.pytorch.org/whl/cu121
 ```
 
+Если при запуске SVD видите ошибку вида:
+`Could not import module 'CLIPImageProcessor'` и в traceback есть `No module named '_lzma'`,
+значит Python собран без `lzma` (часто бывает с `pyenv`).
+Пересоздайте backend venv на Python с `lzma`:
+
+```bash
+python3 -c "import lzma; print('lzma: OK')"
+cd backend
+poetry env remove --all
+poetry env use "$(command -v python3)"
+poetry install --with svd
+poetry run python -m pip install torch torchvision torchaudio
+```
+
 ### 2) Запуск
 
 Backend (в отдельном терминале):
@@ -52,6 +66,9 @@ Backend (в отдельном терминале):
 make run-sadtalker
 # или:
 # make run-svd-m4
+# make run-svd-m4-low
+# make run-svd-m4-tiny
+# make run-svd-m4-pro
 # make run-svd-5080
 ```
 
@@ -103,7 +120,10 @@ SadTalker (использует отдельное venv в `third_party/SadTalke
 
 - `make backend-dev` — backend по настройкам из `backend/.env`
 - `make run-sadtalker` — backend с SadTalker (переменные задаются на время запуска)
-- `make run-svd-m4` — backend с SVD preset для Mac (MPS)
+- `make run-svd-m4` — backend с SVD balanced preset для Mac (MPS)
+- `make run-svd-m4-low` — backend с SVD low-memory preset для Mac (MPS)
+- `make run-svd-m4-tiny` — backend с SVD ultra-low-memory preset для Mac (MPS)
+- `make run-svd-m4-pro` — backend с более «тяжёлым» SVD preset для Mac (MPS)
 - `make run-svd-5080` — backend с SVD preset для мощной CUDA GPU
 - `make frontend-dev` — frontend dev server
 - `make health` — `GET /health` на backend
@@ -148,10 +168,15 @@ npm run dev
 
 Готовые пресеты есть в `Makefile`:
 
-- `make run-svd-m4` — MPS (Mac M4 Pro 38GB): более высокое разрешение, `float32`, `DECODE_CHUNK_SIZE=1`.
+- `make run-svd-m4` — MPS balanced: `640x360`, `10` кадров, `30` шагов, `float32`, `DECODE_CHUNK_SIZE=1`.
+- `make run-svd-m4-low` — MPS low-memory: `512x288`, `8` кадров, `25` шагов, `float32`, `DECODE_CHUNK_SIZE=1`.
+- `make run-svd-m4-tiny` — MPS ultra-low-memory: `384x216`, `6` кадров, `20` шагов, `float32`, `DECODE_CHUNK_SIZE=1`.
+- `make run-svd-m4-pro` — MPS higher quality: `768x432`, `14` кадров, `40` шагов, `float32`, `DECODE_CHUNK_SIZE=1`.
 - `make run-svd-5080` — CUDA (мощная видеокарта): `1024x576`, `25` кадров, `50` шагов, `xformers` (если установлен).
 
 Если упираетесь в память/качество — правьте переменные `AVATAR_SVD_*` в `backend/.env` или переопределяйте их в команде.
+Для качества кодирования mp4 можно дополнительно уменьшать `AVATAR_SVD_ENCODE_CRF` (например `18` → `16`; меньше = лучше качество и больше размер файла).
+Если на MPS получаете чёрное видео, не используйте `float16`: ставьте `AVATAR_SVD_DTYPE=float32`.
 
 ## API
 

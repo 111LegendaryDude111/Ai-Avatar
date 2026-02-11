@@ -68,6 +68,8 @@ class Settings(BaseSettings):
     svd_max_guidance_scale: float = 3.0
     svd_decode_chunk_size: int = 8
     svd_seed: int | None = None
+    # x264 constant rate factor (0..51). Lower means better visual quality / larger files.
+    svd_encode_crf: int = 18
 
     svd_enable_attention_slicing: bool = True
     svd_enable_vae_slicing: bool = True

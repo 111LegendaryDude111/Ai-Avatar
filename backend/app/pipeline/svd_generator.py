@@ -69,6 +69,30 @@ def _get_media_duration_seconds(path: Path) -> float | None:
     return None
 
 
+def _frame_is_near_black(frame: Any, max_value: int = 6) -> bool:
+    try:
+        pil_frame = frame.convert("RGB") if hasattr(frame, "convert") else frame
+        extrema = pil_frame.getextrema()
+    except Exception:
+        return False
+
+    # RGB image: extrema is ((min,max), (min,max), (min,max)).
+    if isinstance(extrema, tuple) and extrema and isinstance(extrema[0], tuple):
+        return all(int(ch_max) <= max_value for _ch_min, ch_max in extrema)
+
+    # Single channel image: extrema is (min,max).
+    if isinstance(extrema, tuple) and len(extrema) == 2:
+        return int(extrema[1]) <= max_value
+    return False
+
+
+def _looks_like_all_black_video(frames: list[Any]) -> bool:
+    if not frames:
+        return False
+    idxs = sorted({0, len(frames) // 2, len(frames) - 1})
+    return all(_frame_is_near_black(frames[idx]) for idx in idxs)
+
+
 class StableVideoDiffusionAvatarVideoGenerator:
     """
     Image → Video via Stable Video Diffusion (diffusers).
@@ -281,6 +305,12 @@ class StableVideoDiffusionAvatarVideoGenerator:
         if device == "mps" and decode_chunk_size_raw is None:
             # MPS often needs smaller decode chunks.
             decode_chunk_size = min(decode_chunk_size, 1)
+        encode_crf_raw = options.get("svd_encode_crf", settings.svd_encode_crf)
+        try:
+            encode_crf = int(encode_crf_raw)
+        except (TypeError, ValueError):
+            encode_crf = int(settings.svd_encode_crf)
+        encode_crf = max(0, min(51, encode_crf))
 
         seed_opt = options.get("svd_seed", settings.svd_seed)
         seed = int(seed_opt) if seed_opt is not None else None
@@ -373,6 +403,13 @@ class StableVideoDiffusionAvatarVideoGenerator:
                 ) from e
             raise
         frames: list[Any] = list(result.frames[0])  # list[PIL.Image.Image]
+        if device == "mps" and dtype_str == "float16" and _looks_like_all_black_video(frames):
+            raise RuntimeError(
+                "SVD produced nearly-black frames on MPS with float16 (known instability).\n"
+                "Retry with `AVATAR_SVD_DTYPE=float32` (recommended).\n"
+                "If needed, lower memory settings: `AVATAR_SVD_WIDTH=384`, `AVATAR_SVD_HEIGHT=216`, "
+                "`AVATAR_SVD_NUM_FRAMES=6`, `AVATAR_SVD_NUM_INFERENCE_STEPS=20`."
+            )
 
         if extend_to_audio and fps > 0 and len(frames) > 0:
             dur = _get_media_duration_seconds(audio_path)
@@ -414,6 +451,8 @@ class StableVideoDiffusionAvatarVideoGenerator:
                 "libx264",
                 "-pix_fmt",
                 "yuv420p",
+                "-crf",
+                str(encode_crf),
                 "-preset",
                 "veryfast",
                 "-movflags",
