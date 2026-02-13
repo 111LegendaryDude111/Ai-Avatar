@@ -22,7 +22,8 @@ def _hash_file(hasher: "hashlib._Hash", path: Path) -> None:
 
 def _cache_key(image_path: Path, audio_path: Path, options: dict[str, Any]) -> str:
     hasher = hashlib.sha256()
-    hasher.update(b"avatar-video:v1\0")
+    # Bump when generation pipeline behavior changes (e.g. codec compatibility fixes).
+    hasher.update(b"avatar-video:v2\0")
     hasher.update(b"backend\0")
     hasher.update(settings.generator_backend.encode("utf-8"))
     hasher.update(b"\0backend-config\0")

@@ -17,6 +17,15 @@ PYTHON ?= python3
 # Override if you want a different CUDA wheel (see https://pytorch.org/get-started/locally/).
 PYTORCH_CUDA_INDEX_URL ?= https://download.pytorch.org/whl/cu121
 
+# SadTalker relies on torchvision internals removed in newer versions.
+# Keep this trio pinned to a known-compatible set.
+SADTALKER_TORCH_VERSION ?= 2.0.1
+SADTALKER_TORCHVISION_VERSION ?= 0.15.2
+SADTALKER_TORCHAUDIO_VERSION ?= 2.0.2
+SADTALKER_NUMPY_VERSION ?= 1.23.4
+SADTALKER_PILLOW_VERSION ?= 10.4.0
+SADTALKER_MARKUPSAFE_VERSION ?= 2.1.5
+
 .PHONY: help doctor env env-backend env-frontend \
 	setup setup-backend setup-backend-svd setup-frontend \
 	setup-svd-mps setup-svd-cuda setup-svd-cuda-xformers torch-mps torch-cuda \
@@ -75,7 +84,14 @@ setup-sadtalker: ## Create SadTalker venv + install deps (torch installed separa
 
 sadtalker-torch-mps: ## Install PyTorch into SadTalker venv (macOS / Apple Silicon)
 	"$(SADTALKER_DIR)/.venv/bin/python" -m pip install -U pip
-	"$(SADTALKER_DIR)/.venv/bin/python" -m pip install torch torchvision torchaudio
+	"$(SADTALKER_DIR)/.venv/bin/python" -m pip install \
+		"torch==$(SADTALKER_TORCH_VERSION)" \
+		"torchvision==$(SADTALKER_TORCHVISION_VERSION)" \
+		"torchaudio==$(SADTALKER_TORCHAUDIO_VERSION)"
+	"$(SADTALKER_DIR)/.venv/bin/python" -m pip install \
+		"numpy==$(SADTALKER_NUMPY_VERSION)" \
+		"pillow==$(SADTALKER_PILLOW_VERSION)" \
+		"MarkupSafe==$(SADTALKER_MARKUPSAFE_VERSION)"
 
 sadtalker-torch-cuda: ## Install PyTorch into SadTalker venv (Linux + NVIDIA CUDA)
 	"$(SADTALKER_DIR)/.venv/bin/python" -m pip install -U pip

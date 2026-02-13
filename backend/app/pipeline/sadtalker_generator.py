@@ -11,6 +11,52 @@ from ..config import settings
 from .base import ProgressCallback
 
 
+def _transcode_to_browser_h264(path: Path) -> None:
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        return
+
+    temp_path = path.with_name(path.stem + ".h264.tmp.mp4")
+    completed = subprocess.run(
+        [
+            ffmpeg,
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            str(path),
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-preset",
+            "medium",
+            "-crf",
+            "18",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            "-movflags",
+            "+faststart",
+            "-shortest",
+            str(temp_path),
+        ],
+        text=True,
+        capture_output=True,
+    )
+    if completed.returncode != 0 or not temp_path.exists() or temp_path.stat().st_size <= 0:
+        if temp_path.exists():
+            temp_path.unlink(missing_ok=True)
+        tail = (completed.stderr or completed.stdout or "").strip()
+        raise RuntimeError(
+            "SadTalker post-processing failed while transcoding to browser-compatible H.264."
+            + (f"\n\n--- ffmpeg output ---\n{tail[-4000:]}" if tail else "")
+        )
+    temp_path.replace(path)
+
+
 class SadTalkerAvatarVideoGenerator:
     def generate(
         self,
@@ -109,5 +155,6 @@ class SadTalkerAvatarVideoGenerator:
 
         output_video_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(newest, output_video_path)
+        _transcode_to_browser_h264(output_video_path)
 
         progress_cb(1.0, "Done")

@@ -14,6 +14,7 @@ export default function App() {
   const [mode, setMode] = useState<InputMode>("text");
   const [text, setText] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [fullFrame, setFullFrame] = useState(true);
   const [jobId, setJobId] = useState<string | null>(null);
   const [job, setJob] = useState<JobStatusResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +73,13 @@ export default function App() {
     formData.append("image", imageFile);
     if (mode === "text") formData.append("text", text.trim());
     if (mode === "audio" && audioFile) formData.append("audio", audioFile);
-    formData.append("options", JSON.stringify({ video_size: 512, video_fps: 25 }));
+    const options: Record<string, unknown> = { video_size: 512, video_fps: 25 };
+    if (fullFrame) {
+      // SadTalker: keep full input frame and paste animated face back into it.
+      options.sadtalker_preprocess = "full";
+      options.sadtalker_still = true;
+    }
+    formData.append("options", JSON.stringify(options));
 
     setIsSubmitting(true);
     try {
@@ -129,6 +136,15 @@ export default function App() {
               Audio
             </label>
           </div>
+
+          <label className="radio">
+            <input
+              type="checkbox"
+              checked={fullFrame}
+              onChange={(e) => setFullFrame(e.target.checked)}
+            />
+            Full frame (fit entire image)
+          </label>
 
           {mode === "text" ? (
             <label className="label">
